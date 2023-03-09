@@ -1,0 +1,527 @@
+## 1. PL/SQL块结构：
+
+```SQL
+DECLARE
+/*声明部分*/ -- 可选
+BEGIN
+/*执行部分*/ --必选
+  EXCEPTION
+  /*异常处理部分*/ --可选
+END;
+```
+### 1. DBMS_OUTPLT
+
+　　`DBMS_OUTPUT`程序包：该程序包是由一系列相关程序组合而成，使用时单独调用该程序包中的某一个程序，包括`PUT_LINE`、`PUT`、`NEW_LINE`等。其中最常用的是`PUT_LINE`程序。
+> PUT_LINE()：打印一行内容，并换行。
+> 
+> PUT():输出一行内容到缓存但不打印，多次执行会在一行内缓存。
+> 
+> NEW_LINE:换行，执行过该命令后可将缓存中所有内容打印并换行。
+
+```SQL
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('HELLO ORACLE!');
+  DBMS_OUTPUT.PUT_LINE(1+2+3);
+  DBMS_OUTPUT.PUT_LINE(SYSDATE);
+END;
+```
+
+```SQL
+BEGIN
+  DBMS_OUTPUT.PUT('今天');
+  DBMS_OUTPUT.PUT('天气');
+  DBMS_OUTPUT.PUT('真不咋样');
+  DBMS_OUTPUT.NEW_LINE;
+END;
+```
+
+#### 1. 打印：Hello Oracle！
+
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('Hello Oracle！');
+END;
+```
+
+#### 2. 打印：员工SMITH的薪资是800元/月
+
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('员工SMITH的薪资是800元/月');
+END;
+```
+
+#### 3. 打印：SALES部门总共有6个人
+
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('SALES部门总共有6个人');
+END;
+```
+
+#### 4. 打印如下对白：
+
+　　海绵宝宝：你好，派大星。
+
+　　派大星：你好，海绵宝宝。
+
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('海绵宝宝：你好，派大星。');
+  DBMS_OUTPUT.PUT_LINE('派大星：你好，海绵宝宝。');
+END;
+```
+
+#### 5. 打印一个❤
+
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('❤');
+END;
+```
+
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('   **   **    ');
+  DBMS_OUTPUT.PUT_LINE('*     *     * ');
+  DBMS_OUTPUT.PUT_LINE('  *       *   ');
+  DBMS_OUTPUT.PUT_LINE('    *   *     ');
+  DBMS_OUTPUT.PUT_LINE('      *       ');
+END;
+```
+
+#### 5.合并显示 
+```SQL
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('Hello Oracle！');
+END;
+/
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('员工SMITH的薪资是800元/月');
+END;
+/
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('SALES部门总共有6个人');
+END;
+/
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('海绵宝宝：你好，派大星。');
+  DBMS_OUTPUT.PUT_LINE('派大星：你好，海绵宝宝。');
+END;
+/
+BEGIN 
+  DBMS_OUTPUT.PUT_LINE('   **   **    ');
+  DBMS_OUTPUT.PUT_LINE('*     *     * ');
+  DBMS_OUTPUT.PUT_LINE('  *       *   ');
+  DBMS_OUTPUT.PUT_LINE('    *   *     ');
+  DBMS_OUTPUT.PUT_LINE('      *       ');
+END;
+```
+
+### 2. DML语句
+
+　　在`PL/SQL`程序中，`DML`操作可以直接运行。
+
+　创建一张表备份`EMP`数据，然后编写`PL/SQL`程序
+
+- 1）清理`EMP`表中`10号部门`数据
+- 2）从`备份表`中把`10号部门`数据恢复
+- 3）调整`30号部门`的薪资为原来的两倍
+
+```SQL
+BEGIN 
+  CREATE TABLE EMP_BAK AS SELECT * FROM EMP;
+  --1）清理EMP表中10号部门数据
+  DELETE FROM EMP WHERE DEPTNO=10;
+  COMMIT;
+  --2）从备份表中把10号部门数据恢复
+  INSERT INTO EMP SELECT * FROM EMP_BAK WHERE DEPTNO=10;
+  COMMIT;
+  --3）调整30号部门的薪资为原来的两倍
+  UPDATE EMP SET SAL=SAL*2 WHERE DEPTNO=30;
+  COMMIT;
+END;
+```
+
+### 3. DDL语句
+
+- 在`PL/SQL`中，`DDL`不能直接操作，需要借助`EXECUTE命令`来实现。
+
+- `EXECUTE IMMEDIATE 'SQL语句'`;  其中`SQL语句`可以是`DML语句`也可以是`DDL语句`
+
+　创建一张表备份`EMP`数据，然后编写`PL/SQL`程序，实现以下操作
+
+- 1）备份`EMP`表
+- 2）清空`EMP`表
+- 3）从备份表中恢复`EMP`表数据
+
+```SQL
+BEGIN 
+  --1）备份EMP表
+  EXECUTE IMMEDIATE 'CREATE TABLE EMP_BAK AS SELECT * FROM EMP';
+  --2）清空EMP表
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE EMP';
+  --3）从备份表中恢复EMP表数据
+  EXECUTE IMMEDIATE 'INSERT INTO EMP SELECT * FROM EMP_BAK';
+  COMMIT;
+END;
+```
+
+　　(1)`DDL语句`不能直接运行
+
+　　(2)`PL/SQL块`在运行前会检查代码合理性
+
+```SQL
+BEGIN 
+  --1）备份EMP表
+  EXECUTE IMMEDIATE 'CREATE TABLE EMP_BAK AS SELECT * FROM EMP';
+  DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI:SS')||'备份EMP表，完成');
+  --2）清空EMP表
+  EXECUTE IMMEDIATE 'TRUNCATE TABLE EMP';
+  DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI:SS')||'清空EMP表，完成');
+  --3）从备份表中恢复EMP表数据
+  EXECUTE IMMEDIATE 'INSERT INTO EMP SELECT * FROM EMP_BAK';
+  DBMS_OUTPUT.PUT_LINE(TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI:SS')||'从备份表中恢复EMP表数据，完成');
+  COMMIT;
+END;
+```
+
+　　合法性检查是在程序运行之前进行的，而非程序运行过程中，但是写在`EXECUTE命令`中的`SQL`，会避开最初的合法性检查，等到该`EXECUTE命令`真正运行时，会检查该`EXECUTE命令`携带的`SQL`的合法性
+
+## 2. 声明部分
+
+```SQL
+DECLARE
+  A NUMBER(4) := 30;  --部门编号
+BEGIN
+  UPDATE EMP SET SAL = 10 WHERE DEPTNO = A;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE(A||'薪资已更新');
+  A := 10;  --赋值  --A=10  --判断条件
+  DELETE FROM EMP WHERE DEPTNO = A;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE(A||'部门数据已删除');
+  A := 20;
+  UPDATE EMP SET SAL = 0 WHERE DEPTNO = A;
+  COMMIT;
+  DBME_OUTPUT_LINE(A||'薪资已更新');
+END;
+```
+
+### 1. %TYPE类型
+
+　　声明该变量的数据类型与指定字段的数据类型一致
+
+```SQL
+DECLARE 
+--V_ENAME VARCHAR2(10);
+  V_ENAME EMP.ENAME%TYPE;
+BEGIN
+  V_EMP : = 10;
+  DELETE FROM EMP WHERE ENAME = V_ENAME;
+  DBMS_OUTPUT.PUT_LINE (V_ENAME);
+END;
+```
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) ;
+BEGIN
+  SELECT ENAME INTO V_ENAME FROM EMP WHERE EMPNO = 7369;
+  DBMS_OUTPUT.PUT_LINE(V_ENAME);
+END;
+```
+
+### 2. RECORD类型
+
+```SQL
+DECLARE 
+  TYPE A IS RECORD (
+    V_EMPNO    NUMBER(4)     ,
+    V_ENAME    VARCHAR2 (100),
+    V_JOB      EMP.JOB%TYPE );
+    V_EMP      A             ;
+BEGIN
+  SELECT EMPNO,ENAME,JOB INTO V_EMP FROM EMP WHERE EMPNO = 7369;
+  DBMS_OUTPUT.PUT_LINE(V_EMP.V_EMPNO||V_EMP.V_ENAME||V_EMP.V_JOB);
+END;
+```
+
+```SQL
+DECLARE 
+  V_EMPNO    NUMBER(4)    ;
+  V_ENAME    VARCHAR2(100);
+  V_JOB      EMP.JOB%TYPE ;
+BEGIN
+  SELECT EMPNO,ENAME,JOB INTO V_EMPNO,V_ENAME,V_JOB FROM EMP WHERE EMPNO = 7369;
+  DBMS_OUTPUT.PUT_LINE(V_EMPNO||V_ENAME||V_JOB);
+END;
+```
+
+```SQL
+DECLARE
+  TYPE EMP_RECORD_TYPE IS RECORD(
+    EMPNO    NUMBER(4) NOT NULL := &P_EMPNO,
+    ENAME    EMP.ENAME%TYPE,
+    JOB      EMP.JOB%TYPE,
+    SAL      EMP.SAL%TYPE,
+    HIREDATE EMP.HIREDATE%TYPE);
+  EMP_RECORD EMP_RECORD_TYPE;
+  V_IN_SAL NUMBER(8,2) DEFAULT &P_SAL;
+BEGIN
+  SELECT EMPNO,ENAME,JOB,SAL,HIREDATE INTO EMP_RECORD FROM EMP WHERE EMPNO = EMP_RECORD.EMPNO;
+  EMP_RECORD.HIREDATE := SYSDATE;
+  EMP_RECORD.SAL := EMP_RECORD.SAL + V_IN_SAL;
+  DBMS_OUTPUT.PUT_LINE(EMP_RECORD.EMPNO);
+  DBMS_OUTPUT.PUT_LINE(EMP_RECORD.JOB);
+  DBMS_OUTPUT.PUT_LINE(EMP_RECORD.SAL);
+  DBMS_OUTPUT.PUT_LINE(EMP_RECORD.HIREDATE);
+END;
+```
+
+### 3. %ROWTYPE类型
+
+```SQL
+DECLARE 
+  V_EMP EMP%ROWTYPE;
+BEGIN
+  SELECT * INTO V_EMP FROM EMP WHERE EMPNO = 7369;
+  DBMS_OUTPUT.PUT_LINE(V_EMP.EMPNO||V_EMP.ENAME||V_EMP.JOB);
+END;
+```
+
+```SQL
+DECLARE
+  EMP_REC EMP%ROWTYPE;
+BEGIN
+  SELECT * INTO EMP_REC FROM EMP WHERE EMPNO = &P_NUM;
+  INSERT INTO EMP_80 /*(EMPNO,ENAME,JOB,MGR,HIREDATE,SAL,COMM,DEPTNO)*/  --VALUES按顺序，此部分可以省略
+    VALUES (
+        EMP_REC.EMPNO   ,
+        EMP_REC.ENAME   ,
+        EMP_REC.JOB     ,
+        EMP_REC.MGR     ,
+        EMP_REC.HIREDATE,
+        EMP_REC.SAL     ,
+        EMP_REC.COMM    ,
+        EMP_REC.DEPTNO );
+  COMMIT;
+END;
+```
+
+## 4. 声明部分-定义变量和常量
+
+### 1. 定义变量
+
+　　变量是指其值在程序运行过程中可以改变的数据存储结构，必须元素有变量名称和数据类型，可选项有初始值。
+
+### 2. 定义常量
+
+　　常量是指其值在程序运行过程中不可改变的数据存储结构，必须元素有`常量名`、关键词`constant`、`数据类型`和`常量值`。
+
+```SQL
+DECLARE
+  A NUMBER := 10;  --变量
+  B CONSTANT NUMBER := 20;  --常量
+BEGIN
+  DBMS_OUTPUT.PUT_LINE(A);
+  DBMS_OUTPUT.PUT_LINE(B);
+END;
+```
+
+####  1. 通过 := 赋值
+
+　　该方法可用在`PL/SQL块`中的任何部分，其中在声明部分中赋予的变量值称为初始值。另外还可以设置`&`符号手动获取变量值；
+
+```SQL
+DECLARE
+  V_DEPTNO NUMBER := &请指定部门编号;
+BEGIN
+  DELETE FROM EMP WHERE DEPTNO = V_DEPTNO;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE(V_DEPTNO||'号部门删除');
+END;
+```
+
+　　--字符型
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := '&请指定员工姓名';
+BEGIN
+  DELETE FROM EMP WHERE ENAME = V_ENAME;
+  COMMIT;
+  DBMS_OUTPU.PUT_LINE('员工'||V_ENAME||'已删除');
+END;
+```
+
+　　--姓名大写
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := '&请指定员工姓名';
+BEGIN
+  DELETE FROM EMP WHERE ENAME = UPPER(V_ENAME);
+  COMMIT;
+  DBMS_OUTPU.PUT_LINE('员工'||V_ENAME||'已删除');
+END;
+```
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := UPPER('&请指定员工姓名');
+BEGIN
+  DELETE FROM EMP WHERE ENAME = V_ENAME;
+  COMMIT;
+  DBMS_OUTPU.PUT_LINE('员工'||V_ENAME||'已删除');
+END;
+```
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := '&请指定员工姓名' ;
+BEGIN
+  V_ENAME=UPPER(V_ENAME)
+  DELETE FROM EMP WHERE ENAME = V_ENAME;
+  COMMIT;
+  DBMS_OUTPU.PUT_LINE('员工'||V_ENAME||'已删除');
+END;
+```
+
+####  2. 通过SELECT value INTO var_name 的方法赋值
+
+　　即将数据查出后赋予到某变量；
+
+```SQL
+DECLARE
+  A VARCHAR2(10);
+BEGIN
+/*SELECT ENAME INTO A FROM EMP WHERE EMPNO = 7566;*/
+  EXECUTE IMMEDIATE 'SELECT ENAME FROM EMP WHERE EMPNO=7566' INTO A;
+  DBMS_OUTPUT.PUT_LINE(A);
+END;
+```
+
+####  3. EXECUTE IMMEDIATE v_sql INTO var_name
+
+　　类似于方法2，也是将数据查出后赋予到变量。
+
+```SQL
+DECLARE
+  A VARCHAR2(10);
+  V_SQL VARCHAR2(2000);
+BEGIN
+/*SELECT ENAME INTO A FROM EMP WHERE EMPNO = 7566;*/
+/*EXECUTE IMMEDIATE 'SELECT ENAME FROM EMP WHERE EMPN0=7566' INTO A;*
+  V_SQL := 'SELECT ENAME FROM EMP WHERE EMPNO=7566';
+  EXECUTE IMMEDIATE V_SQL INTO A;
+  DBMS_OUTPUT.PUT_LINE(A);
+END;
+```
+
+### 引号问题
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := 'SMITH';
+  V_SAL   NUMBER := 1000;
+  V_SQL   VARCHAR2(1000);
+  C_DEPTNO CONSTANT NUMBER := 10;
+BEGIN
+  SELECT SAL INTO V_SAL FROM EMP WHERE ENAME = V_ENAME;
+  DBMS_OUTPUT.PUT_LINE(V_ENAME||'的工资是'||V_SAL);
+  V_ENAME := 'SCOTT';
+  V_SQL   := 'SELECT SAL FROM EMP WHERE ENAME = '''||V_ENAME||'''';
+  EXECUTE IMMEDIATE V_SQL INTO V_SAL;
+  DBMS_OUTPUT.PUT_LINE(V_ENAME||'的工资是'||V_SAL);
+  SELECT SUM(SAL) INTO V_SAL FROM EMP WHERE DEPTNO = C_DEPTNO;
+  DBMS_OUTPUT.PUT_LINE(C_DEPTNO||'部门的总工资是'||V_SAL);
+END;
+```
+
+```SQL
+DECLARE
+  V_SQL VARCHAR2(2000);  --动态SQL
+BEGIN
+  V_SQL := 'DELETE FROM EMP WHERE DEPTNO = 10';
+  EXECUTE IMMEDIATE V_SQL;
+  COMMIT;
+END;
+```
+
+```SQL
+DECLARE
+  V_SQL VARCHAR2(2000); --动态SQL
+BEGIN
+  V_SQL := 'DELETE FROM EMP WHERE ENAME = 'JAMES'';  --ERROR
+  EXECUTE IMMEDIATE V_SQL;
+  COMMIT;
+END;
+```
+
+```SQL
+DECLARE
+  V_SQL VARCHAR2(2000);  --动态SQL
+BEGIN
+  V_SQL := 'DELETE FROM EMP WHERE ENAME = ''JAMES''';  --两个'表示单引号
+  EXECUTE IMMEDIATE V_SQL;
+  COMMIT;
+END;
+```
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := '&请指定员工姓名';
+  V_SQL VARCHAR2(2000); 
+BEGIN
+  V_SQL := 'DELETE FROM EMP WHERE ENAME = ''V_ENAME''';  --ERROR，结果为 DELETE FROM EMP WHERE ENAME = 'V_ENAME'
+  DBMS_OUTPUT.PUT_LINE(V_SQL);
+  EXECUTE IMMEDIATE V_SQL;
+  COMMIT;
+END;
+```
+
+```SQL
+DECLARE
+  V_ENAME VARCHAR2(10) := '&请指定员工姓名';
+  V_SQL VARCHAR2(2000); 
+BEGIN
+  V_SQL := 'DELETE FROM EMP WHERE ENAME = '''||V_ENAME||''''; 
+  DBMS_OUTPUT.PUT_LINE(V_SQL);
+  EXECUTE IMMEDIATE V_SQL;
+  COMMIT;
+
+END;
+--------------------------------------------------
+DELETE FROM EMP WHERE ENAME = '
+MARTIN
+'
+--------------------------------------------------
+V_SQL := 
+' DELETE FROM EMP WHERE ENAME = '' '      
+||
+V_ENAME
+||
+' '' '
+可以看作
+V_SQL := A||B||C
+A := ' DELETE FROM EMP WHERE ENAME = '' '
+B := V_ENAME
+C := ''''
+-------------------------------------------------
+```
+
+```SQL
+DECLARE
+  A VARCHAR2(1000);
+  B VARCHAR2(10);
+  C VARCHAR2(10);
+BEGIN
+  B := 'SMITH';
+  A := 'SELECT JOB FROM EMP WHERE ENAME = '||''''||B||'''';
+  DBMS_OUTPUT.PUT_LINE(B);
+  DBMS_OUTPUT.PUT_LINE(A);
+  EXECUTE IMMEDIATE A INTO C;
+  DBMS_OUTPUT.PUT_LINE(C);
+END;
+```
